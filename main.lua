@@ -14,10 +14,11 @@ require "player"
 Material = Base:extend()
 function Material:new(x, y)
     Material.super.new(self, x, y)
+    self.max_stack = 10
 end
 
 Metal = Material:extend()
-function Metal:readable_name()
+function Metal:type()
     return "Metal"
 end
 function Metal:new(x, y)
@@ -52,6 +53,12 @@ function player_keypress(dt)
     player:move(dx, dy)
 end
 
+function love.keyreleased(key)
+    if key == "space" then
+        player:pickup()
+    end
+end
+
 function love.update(dt)
     -- Probably only required for dev :)
     require("lurker").update()
@@ -79,6 +86,15 @@ function love.draw()
 end
 
 function love.ui()
+    local c = (color.white:to01())
+    love.graphics.setColor(c.r, c.g, c.b, c.a)
     love.graphics.origin()
-    love.graphics.print(player:tile_underneath(), 10, 10)
+    local tile = player:tile_underneath()
+    if tile ~= nil then
+        love.graphics.print(tile:readable_name(), 10, 10)
+    end
+    tile = player.holding
+    if tile ~= nil then
+        love.graphics.print("holding ".. tile:readable_name(), 10, 20)
+    end
 end

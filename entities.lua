@@ -49,13 +49,41 @@ function entities.draw()
     )
 end
 
+function entities.remove(e)
+    local index = -1
+    for i, entity in ipairs(entities) do
+        if entity:x() == e:x() and entity:y() == e:y() then
+            index = i
+            break
+        end
+    end
+    if index >= 0 then
+        table.remove(entities, index)
+    end
+end
+
 -- returns the matching entity if one at location v
 -- else nil
-function entities.matching(v)
+--- @return Base | nil
+function entities.matching(v, filter)
     for _, entity in ipairs(entities) do
-        if entity:x() == v.x and entity:y() == v.y then
-            return entity
+        local e = entities._single_match(v, entity, filter)
+        if e ~= nil then
+            return e
         end
+    end
+    return nil
+end
+
+-- lua has no "continue" keyword, so this is kinda
+-- the best way to do the filter, without not-ing the ifs
+--- @return Base | nil
+function entities._single_match(v, entity, filter)
+    if filter.hide_held == true and entity.is_held then
+        return nil
+    end
+    if entity:x() == v.x and entity:y() == v.y then
+        return entity
     end
     return nil
 end

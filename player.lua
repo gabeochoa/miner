@@ -1,14 +1,18 @@
+---@diagnostic disable: undefined-field
 require "util"
+require "deepcopy"
 
 Player = Base:extend()
 function Player:new(x, y)
     Player.super.new(self, x or WORLD_MAX / 2, y or WORLD_MAX / 2)
     self.p = vec(self.raw.x, self.raw.y)
+    self.hand_size = 1
 end
 
 function Player:px()
     return self.p.x
 end
+
 function Player:py()
     return self.p.y
 end
@@ -26,22 +30,80 @@ end
 function Player:move(dx, dy)
     local spd = 2
     self.raw =
-        vec(
+    vec(
         self.raw.x + (dx * spd),
         self.raw.y + (dy * spd)
-        --
+    --
     )
     self.p =
-        vec(
+    vec(
         util.snap_to_grid(self.raw.x),
         util.snap_to_grid(self.raw.y)
-        --
+    --
     )
-    print(self.raw.x .. " ", self.p)
+    -- print(self.raw.x .. " ", self.p)
 end
 
+--- @return Base|nil
 function Player:tile_underneath()
-    local match = entities.matching(self.p)
-    if match == nil then return "" end
-    return match:readable_name();
+    return entities.matching(self.p, { hide_held = true })
+end
+
+-- todo show a toast - "picked up metal"
+-- todo doesnt check grid bounds
+
+-- Logic
+--     are we holding?
+--         -> standing on empty spot?
+--             -> drop it
+--         -> standing on matching type?
+--             -> cell has space?
+--                 -> store as much as possible
+--     -> anything where we are standing?
+--         -> pick up hand size
+function Player:pickup()
+    local standing_cell = self:tile_underneath()
+
+    if self.holding ~= nil then
+        -- empty spot, no worry to merge
+        if standing_cell == nil then
+            local entity = table.deepcopy(self.holding)
+            entity:setPos(self.p)
+            entity:toggle_held()
+            entities.add(entity)
+            self.holding = nil
+            return
+        end
+        -- matching
+        if standing_cell:type() == self.holding:type() then
+            local amt = self.holding.stack_size
+            while standing_cell:can_stack_more(1) and amt > 0 do
+                standing_cell:inc_stack(1)
+                amt = amt - 1
+            end
+            if amt == 0 then
+                self.holding = nil
+            end
+            return
+        end
+        -- todo show toast, cant drop, not empty and no match
+        return
+    end
+
+    -- cant pick up if nothing there
+    if standing_cell == nil then
+        return
+    end
+
+    -- pick up cell
+    self.holding = table.deepcopy(standing_cell)
+    self.holding.stack_size = 0
+    self.holding:toggle_held()
+
+    local amount = math.min(standing_cell.stack_size, self.hand_size)
+    self.holding:inc_stack(amount)
+    standing_cell:inc_stack(-amount)
+    if standing_cell.stack_size == 0 then
+        entities.remove(standing_cell)
+    end
 end
