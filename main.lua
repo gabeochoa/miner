@@ -17,15 +17,130 @@ function Material:new(x, y)
     self.max_stack = 10
 end
 
+function Material:draw_index()
+    return DrawIndexes.Material
+end
+
 Metal = Material:extend()
 function Metal:type()
     return "Metal"
 end
+
 function Metal:new(x, y)
     Metal.super.new(self, x, y)
 end
+
 function Metal:color()
     return color.metallic_blue
+end
+
+Dir = {
+    Right = 0,
+    Down = 1,
+    Left = 2,
+    Up = 3,
+};
+
+Tractor = Base:extend()
+function Tractor:type()
+    return "Tractor"
+end
+
+function Tractor:draw_index()
+    return DrawIndexes.Furniture
+end
+
+function Tractor:new(x, y)
+    Tractor.super.new(self, x, y)
+    self.max_stack = 1
+    self.facing = Dir.Right
+    self.reach = 10
+
+    self.on_track = {}
+
+    self.anim_timer = 0
+    self.anim_step_r = 0.1;
+    self.anim_step = self.anim_step_r;
+end
+
+function Tractor:color()
+    return color.lavender
+end
+
+function Tractor:beamcolor()
+    return color.pale_lavender
+end
+
+function Tractor:can_take()
+    return #self.on_track < self.reach
+end
+
+function Tractor:place_on_track(e, location)
+    -- todo items should either not spawn on beam or beam should pick them automatically
+    -- todo support dropping items anywhere on track
+    -- todo validate can place
+    table.insert(self.on_track, e);
+end
+
+--- @return vec
+function Tractor:dropoff_loc()
+    -- todo support other directions
+    return vec(self:x() + ((self.reach + 1)*TILE_SIZE), self:y())
+end
+
+function Tractor:shuffle_items()
+    -- interate backwards
+    for i = #self.on_track, 1, -1 do
+        self:shuffle_item(i)
+    end
+end
+
+function Tractor:shuffle_item(i)
+    local item = self.on_track[i]
+    if item:pos() == self:dropoff_loc() then return end
+
+    -- todo find new location with direction
+    local new_location = vec(item:x() + 1, item:y())
+
+    local at_new = entities.matching(new_location)
+    if at_new == nil then -- empty, just move it over
+        item:setPos(new_location)
+        return
+    end
+    -- has item in new, but types dont match so no merge
+    if at_new ~= nil and at_new:type() ~= item:type() then
+        return
+    end
+    -- we should merge,
+    local amt_can_fit = at_new:amt_to_max();
+    local amt_to_move = math.min(amt_can_fit, item.stack_size)
+    at_new:inc_stack(amt_to_move)
+    item:inc_stack(-amt_to_move)
+    -- delete old item if empty
+    if item.stack_size == 0 then
+        table.remove(self.on_track, i)
+        entities.remove(item)
+    end
+end
+
+function Tractor:update(dt)
+    Tractor.super.update(self, dt);
+    self.anim_step = self.anim_step - dt
+    if self.anim_step <= 0 then
+        self.anim_timer = (self.anim_timer + 1) % self.reach
+        self.anim_step = self.anim_step_r
+        --
+        self:shuffle_items()
+    end
+end
+
+function Tractor:draw()
+    Tractor.super.draw(self);
+    for i = 1, self.reach, 1 do
+        local c = (self:beamcolor():to01())
+        love.graphics.setColor(c.r, c.g, c.b, c.a / ((i - self.anim_timer) % self.reach))
+        love.graphics.rectangle("fill", self:x() + (i * TILE_SIZE), self:y(), TILE_SIZE, TILE_SIZE)
+    end
 end
 
 require "entities"
@@ -95,6 +210,6 @@ function love.ui()
     end
     tile = player.holding
     if tile ~= nil then
-        love.graphics.print("holding ".. tile:readable_name(), 10, 20)
+        love.graphics.print("holding " .. tile:readable_name(), 10, 20)
     end
 end

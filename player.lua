@@ -77,7 +77,7 @@ function Player:pickup()
         -- matching
         if standing_cell:type() == self.holding:type() then
             local amt = self.holding.stack_size
-            while standing_cell:can_stack_more(1) and amt > 0 do
+            while standing_cell:can_stack_more(1) and amt >= 0 do
                 standing_cell:inc_stack(1)
                 amt = amt - 1
             end
@@ -85,6 +85,17 @@ function Player:pickup()
                 self.holding = nil
             end
             return
+        end
+
+        if standing_cell:is(Tractor) and standing_cell:can_take(self.holding) then
+            -- todo handle when holding more than 1
+            local entity = table.deepcopy(self.holding)
+            entity:setPos(self.p)
+            entity:toggle_held()
+            entities.add(entity)
+
+            standing_cell:place_on_track(entity)
+            self.holding = nil;
         end
         -- todo show toast, cant drop, not empty and no match
         return

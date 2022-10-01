@@ -1,18 +1,21 @@
+require "util"
+
 IterationResp = {
     Continue = 0,
     Break = 1
 }
 
 entities = {}
+entities.__entity_list = {}
 
 function entities.add(entity)
-    table.insert(entities, entity)
+    table.insert(entities.__entity_list, entity)
 end
 
 -- Runs a function for each entity,
 -- function should return a Iteration response
 function entities.forEach(cb)
-    for _, entity in ipairs(entities) do
+    for _, entity in ipairs(entities.__entity_list) do
         local resp = cb(entity)
         if resp == IterationResp.Break then
             break
@@ -26,10 +29,15 @@ function entities.load_world()
         return util.snap_to_grid(love.math.random(mn, mx))
     end
     -- todo world generation
-    for i = 1, 10, 1 do
+    for i = 1, 100, 1 do
         local x = rand_on_grid(0, WORLD_MAX)
         local y = rand_on_grid(0, WORLD_MAX)
         entities.add(Metal(x, y))
+    end
+    for i = 1, 10, 1 do
+        local x = rand_on_grid(0, WORLD_MAX)
+        local y = rand_on_grid(0, WORLD_MAX)
+        entities.add(Tractor(x, y))
     end
 end
 
@@ -42,23 +50,25 @@ function entities.update(dt)
 end
 
 function entities.draw()
-    entities.forEach(
-        function(entity)
-            entity:draw()
-        end
-    )
+    local drawcmp = function(t, a, b) 
+        print(t, a, b)
+        return t[a]:draw_index() > t[b]:draw_index() 
+    end
+    for _, entity in util.spairs(entities.__entity_list, drawcmp) do
+        entity:draw()
+    end
 end
 
 function entities.remove(e)
     local index = -1
-    for i, entity in ipairs(entities) do
+    for i, entity in ipairs(entities.__entity_list) do
         if entity:x() == e:x() and entity:y() == e:y() then
             index = i
             break
         end
     end
     if index >= 0 then
-        table.remove(entities, index)
+        table.remove(entities.__entity_list, index)
     end
 end
 
@@ -66,7 +76,7 @@ end
 -- else nil
 --- @return Base | nil
 function entities.matching(v, filter)
-    for _, entity in ipairs(entities) do
+    for _, entity in ipairs(entities.__entity_list) do
         local e = entities._single_match(v, entity, filter)
         if e ~= nil then
             return e
@@ -79,7 +89,7 @@ end
 -- the best way to do the filter, without not-ing the ifs
 --- @return Base | nil
 function entities._single_match(v, entity, filter)
-    if filter.hide_held == true and entity.is_held then
+    if filter and filter.hide_held and entity.is_held then
         return nil
     end
     if entity:x() == v.x and entity:y() == v.y then

@@ -4,10 +4,14 @@ function vec:new(x, y)
     self.y = y
 end
 
-function vec:__add(a, b)
+function vec.__add(a, b)
     return vec:new(a.x + b.x, a.y + b.y)
 end
 
 function vec:__tostring()
     return "vec(" .. self.x .. "," .. self.y .. ")"
+end
+
+function vec.__eq(a,b)
+	return a.x == b.x and a.y == b.y
 end
