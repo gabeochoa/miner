@@ -9,6 +9,12 @@ WORLD_MAX = 800
 
 require "util"
 require "player"
+require "npcs"
+
+function __newindex(t, k, v)
+    print("*update of element " .. tostring(k) ..
+        " to " .. tostring(v))
+end
 
 -- types
 Material = Base:extend()
@@ -85,7 +91,7 @@ end
 --- @return vec
 function Tractor:dropoff_loc()
     -- todo support other directions
-    return vec(self:x() + ((self.reach + 1)*TILE_SIZE), self:y())
+    return vec(self:x() + ((self.reach + 1) * TILE_SIZE), self:y())
 end
 
 function Tractor:shuffle_items()
@@ -102,7 +108,7 @@ function Tractor:shuffle_item(i)
     -- todo find new location with direction
     local new_location = vec(item:x() + 1, item:y())
 
-    local at_new = entities.matching(new_location)
+    local at_new = entity_helper.matching(entities, new_location)
     if at_new == nil then -- empty, just move it over
         item:setPos(new_location)
         return
@@ -119,7 +125,7 @@ function Tractor:shuffle_item(i)
     -- delete old item if empty
     if item.stack_size == 0 then
         table.remove(self.on_track, i)
-        entities.remove(item)
+        entity_helper.remove(entities, item)
     end
 end
 
@@ -182,7 +188,8 @@ function love.update(dt)
         love.event.quit(0)
     end
     player_keypress(dt)
-    entities.update(dt)
+    entity_helper.update(entities, dt)
+    entity_helper.update(npcs, dt)
 end
 
 function love.draw()
@@ -191,9 +198,9 @@ function love.draw()
     local c = (color.white:to01())
     love.graphics.setColor(c.r, c.g, c.b, c.a)
     love.graphics.translate(-player:px() + WINDOW_W / 2, -player:py() + WINDOW_H / 2)
-    love.graphics.rectangle("fill", 100, 200, 50, 80)
 
-    entities.draw()
+    entity_helper.draw(entities)
+    entity_helper.draw(npcs)
     player:draw()
 
     -- this should be last
@@ -206,7 +213,7 @@ function love.ui()
     love.graphics.origin()
     local tile = player:tile_underneath()
     if tile ~= nil then
-        love.graphics.print(tile:readable_name(), 10, 10)
+        love.graphics.print("on top: " .. tile:readable_name(), 10, 10)
     end
     tile = player.holding
     if tile ~= nil then

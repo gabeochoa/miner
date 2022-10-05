@@ -2,29 +2,33 @@
 require "util"
 require "deepcopy"
 
-Player = Base:extend()
-function Player:new(x, y)
-    Player.super.new(self, x or WORLD_MAX / 2, y or WORLD_MAX / 2)
+Person = Base:extend()
+function Person:new(x, y)
+    Person.super.new(self, x or WORLD_MAX / 2, y or WORLD_MAX / 2)
     self.p = vec(self.raw.x, self.raw.y)
     self.hand_size = 1
 end
 
-function Player:px()
-    return self.p.x
-end
+function Person:px() return self.p.x end
 
-function Player:py()
-    return self.p.y
-end
+function Person:py() return self.p.y end
 
-function Player:color()
-    return color.off_white
-end
+function Person:color() return color.off_white end
 
-function Player:draw()
+function Person:draw()
     local c = (self:color():to01())
     love.graphics.setColor(c.r, c.g, c.b, c.a)
-    love.graphics.rectangle("fill", player:px(), player:py(), TILE_SIZE, TILE_SIZE)
+    love.graphics.rectangle("fill", self:px(), self:py(), TILE_SIZE, TILE_SIZE)
+end
+
+--- @return Base|nil
+function Person:tile_underneath()
+    return entity_helper.matching(entities, self.p, { hide_held = true })
+end
+
+Player = Person:extend()
+function Player:new(x, y)
+    Player.super.new(self, x or WORLD_MAX / 2, y or WORLD_MAX / 2)
 end
 
 function Player:move(dx, dy)
@@ -42,11 +46,6 @@ function Player:move(dx, dy)
     --
     )
     -- print(self.raw.x .. " ", self.p)
-end
-
---- @return Base|nil
-function Player:tile_underneath()
-    return entities.matching(self.p, { hide_held = true })
 end
 
 -- todo show a toast - "picked up metal"
@@ -70,7 +69,7 @@ function Player:pickup()
             local entity = table.deepcopy(self.holding)
             entity:setPos(self.p)
             entity:toggle_held()
-            entities.add(entity)
+            entity_helper.add(entities, entity)
             self.holding = nil
             return
         end
@@ -92,7 +91,7 @@ function Player:pickup()
             local entity = table.deepcopy(self.holding)
             entity:setPos(self.p)
             entity:toggle_held()
-            entities.add(entity)
+            entity_helper.add(entities, entity)
 
             standing_cell:place_on_track(entity)
             self.holding = nil;
@@ -115,6 +114,6 @@ function Player:pickup()
     self.holding:inc_stack(amount)
     standing_cell:inc_stack(-amount)
     if standing_cell.stack_size == 0 then
-        entities.remove(standing_cell)
+        entity_helper.remove(entities, standing_cell)
     end
 end
