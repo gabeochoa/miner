@@ -29,14 +29,32 @@ end
 Player = Person:extend()
 function Player:new(x, y)
     Player.super.new(self, x or WORLD_MAX / 2, y or WORLD_MAX / 2)
+    self.speed = 2;
+end
+
+function Player:can_go(dx, dy)
+    for i = 1, self.speed, 1 do
+        local step = vec(
+            util.snap_to_grid(self.raw.x + (dx * i)),
+            util.snap_to_grid(self.raw.y + (dy * i))
+        )
+        local possible_wall = entity_helper.matching(entities, step, { impassible = true })
+        if possible_wall then
+            return false
+        end
+    end
+    return true
 end
 
 function Player:move(dx, dy)
-    local spd = 2
+    if not self:can_go(dx, dy) then
+        return
+    end
+
     self.raw =
     vec(
-        self.raw.x + (dx * spd),
-        self.raw.y + (dy * spd)
+        self.raw.x + (dx * self.speed),
+        self.raw.y + (dy * self.speed)
     --
     )
     self.p =

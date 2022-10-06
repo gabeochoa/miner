@@ -99,6 +99,8 @@ function Base:toggle_held()
     self.is_held = not self.is_held
 end
 
+function Base:can_walk_on() return true end
+
 function Base:draw()
     if self.is_held then
         return

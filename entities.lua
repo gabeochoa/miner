@@ -27,10 +27,18 @@ function entities.load_world()
     for i = 1, 10, 1 do
         local x = util.rand_on_grid(0, WORLD_MAX)
         local y = util.rand_on_grid(0, WORLD_MAX)
-        entity_helper.add(npcs, NPC(x,y))
+        entity_helper.add(npcs, NPC(x, y))
+    end
+
+    for i = 60 * TILE_SIZE, 90 * TILE_SIZE, 3 * TILE_SIZE do
+        for j = 50 * TILE_SIZE, 70 * TILE_SIZE, 2 * TILE_SIZE do
+            entity_helper.add(entities, Wall(
+                util.snap_to_grid(i),
+                util.snap_to_grid(j)
+            ))
+        end
     end
 end
-
 
 function entity_helper.add(group, entity)
     table.insert(group.__entity_list, entity)
@@ -97,6 +105,9 @@ end
 --- @return Base | nil
 function entity_helper._single_match(v, entity, filter)
     if filter and filter.hide_held and entity.is_held then
+        return nil
+    end
+    if filter and filter.impassible and entity:can_walk_on() then
         return nil
     end
     if entity:x() == v.x and entity:y() == v.y then

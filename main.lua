@@ -27,6 +27,7 @@ function Material:draw_index()
     return DrawIndexes.Material
 end
 
+-- metal
 Metal = Material:extend()
 function Metal:type()
     return "Metal"
@@ -39,6 +40,20 @@ end
 function Metal:color()
     return color.metallic_blue
 end
+
+-- ...
+
+-- wall
+Wall = Material:extend()
+function Wall:type() return "Wall" end
+
+function Wall:new(x, y) Wall.super.new(self, x, y) end
+
+function Wall:color() return color.hot_pink end
+
+function Wall:can_walk_on() return false; end
+
+-- end wall
 
 Dir = {
     Right = 0,
@@ -171,7 +186,8 @@ function player_keypress(dt)
     elseif love.keyboard.isDown("w") then
         dy = -1
     end
-    player:move(dx, dy)
+    player:move(dx, 0)
+    player:move(0, dy)
 end
 
 function love.keyreleased(key)
