@@ -46,13 +46,14 @@ function Person:can_go(dx, dy)
     return true
 end
 
-function Person:move(dx, dy)
+function Person:move(dx, dy, dt)
+    local dt = dt or 1;
     if not self:can_go(dx, dy) then
         return
     end
     self.raw = vec(
-        self.raw.x + (dx * self:speed()),
-        self.raw.y + (dy * self:speed())
+        self.raw.x + (dx * dt * self:speed()),
+        self.raw.y + (dy * dt * self:speed())
     )
     self.p = self:snap_pos()
 end

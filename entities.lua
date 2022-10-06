@@ -15,24 +15,22 @@ entities = {}
 entities.__entity_list = {}
 function entities.load_world()
     -- todo world generation
-    for i = 1, 100, 1 do
-        local x = util.rand_on_grid(0, WORLD_MAX)
-        local y = util.rand_on_grid(0, WORLD_MAX)
-        entity_helper.add(entities, Metal(x, y))
-    end
-    for i = 1, 10, 1 do
-        local x = util.rand_on_grid(0, WORLD_MAX)
-        local y = util.rand_on_grid(0, WORLD_MAX)
-        entity_helper.add(entities, Tractor(x, y))
-    end
-    for i = 1, 10, 1 do
-        local x = util.rand_on_grid(0, WORLD_MAX)
-        local y = util.rand_on_grid(0, WORLD_MAX)
-        entity_helper.add(npcs, NPC(x, y))
-    end
+    -- for i = 1, 10, 1 do
+    --     local x = util.rand_on_grid(0, WORLD_MAX)
+    --     local y = util.rand_on_grid(0, WORLD_MAX)
+    --     entity_helper.add(entities, Metal(x, y))
+    -- end
+    -- for i = 1, 1, 1 do
+    --     local x = util.rand_on_grid(0, WORLD_MAX)
+    --     local y = util.rand_on_grid(0, WORLD_MAX)
+    --     entity_helper.add(entities, Tractor(x, y))
+    -- end
+    -- for i = 1, 10, 1 do
+        entity_helper.add(npcs, NPC(WORLD_MAX / 2, WORLD_MAX / 2))
+    -- end
 
-    for i = 60 * TILE_SIZE, 90 * TILE_SIZE, 3 * TILE_SIZE do
-        for j = 50 * TILE_SIZE, 70 * TILE_SIZE, 2 * TILE_SIZE do
+    for i = 1, WORLD_MAX, 4 * TILE_SIZE do
+        for j = 1, WORLD_MAX, 4 * TILE_SIZE do
             entity_helper.add(entities, Wall(
                 util.snap_to_grid(i),
                 util.snap_to_grid(j)
@@ -109,6 +107,9 @@ function entity_helper._single_match(v, entity, filter)
         return nil
     end
     if filter and filter.impassible and entity:can_walk_on() then
+        return nil
+    end
+    if filter and filter.walkable and not entity:can_walk_on() then
         return nil
     end
     if entity:x() == v.x and entity:y() == v.y then

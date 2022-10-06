@@ -53,3 +53,13 @@ function vec.snap_to_grid(x, y)
         util.snap_to_grid(y)
     )
 end
+
+-- adding this for luafinding 
+function vec:ID()
+    if self._ID == nil then
+        local x, y = self.x, self.y
+        self._ID = 0.5 * ( ( x + y ) * ( x + y + 1 ) + y )
+    end
+
+    return self._ID
+end

@@ -1,4 +1,10 @@
 util = {}
+function util.sign(x)
+    if x > 0 then return 1
+    elseif x < 0 then return -1
+    else return 0
+    end
+end
 function util.snap_to_grid(x)
     return TILE_SIZE * math.floor(x / TILE_SIZE)
 end
@@ -28,6 +34,22 @@ function util.spairs(t, order)
             return keys[i], t[keys[i]]
         end
     end
+end
+
+--- @param a vec
+---@param b vec 
+---@return number
+function util.dist(a, b)
+    return util.dist_(a.x, a.y, b.x, b.y)
+end
+
+--- @param ax number
+---@param bx number
+---@param ay number
+---@param by number
+---@return number
+function util.dist_(ax, bx, ay, by)
+    return math.sqrt(math.pow(bx - ax, 2) + math.pow(by - ay, 2))
 end
 
 DrawIndexes = {

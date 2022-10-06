@@ -2,10 +2,12 @@ Object = require "classic"
 require "color"
 require "vec"
 
+Batteries = require("batteries")
+
 TILE_SIZE = 10
 WINDOW_W = 800
 WINDOW_H = 600
-WORLD_MAX = 800
+WORLD_MAX = 600
 
 require "util"
 require "player"
