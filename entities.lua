@@ -1,4 +1,5 @@
 require "util"
+require "npcs"
 
 IterationResp = {
     Continue = 0,

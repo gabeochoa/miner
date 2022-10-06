@@ -36,6 +36,7 @@ DrawIndexes = {
     Material = 2,
 }
 
+---@class Base
 Base = Object:extend()
 function Base:new(x, y)
     self.raw = vec(x, y)
@@ -44,60 +45,38 @@ function Base:new(x, y)
     self.is_held = false
 end
 
-function Base:setPos(v)
-    self.raw = v
-end
+--- @param v vec
+function Base:setPos(v) self.raw = v end
 
-function Base:x()
-    return self.raw.x
-end
+function Base:x() return self:pos().x end
 
-function Base:y()
-    return self.raw.y
-end
+function Base:y() return self:pos().y end
 
-function Base:pos()
-    return self.raw
-end
+function Base:pos() return self.raw end
 
-function Base:update(dt)
-end
+function Base:snap_pos() return vec.snap_to_grid(self.raw.x, self.raw.y) end
 
-function Base:draw_index(v)
-    return DrawIndexes.BG
-end
+function Base:update(dt) end
 
-function Base:color()
-    return color.acid_green
-end
+function Base:draw_index(v) return DrawIndexes.BG end
 
-function Base:alpha()
-    return 1
-end
+function Base:color() return color.acid_green end
 
-function Base:type()
-    return "Base"
-end
+function Base:alpha() return 1 end
 
-function Base:inc_stack(amt)
-    self.stack_size = self.stack_size + amt
-end
+function Base:type() return "Base" end
 
-function Base:can_stack_more(amt)
-    return self:amt_to_max() > amt
-end
+function Base:inc_stack(amt) self.stack_size = self.stack_size + amt end
 
-function Base:amt_to_max()
-    return self.max_stack - self.stack_size
-end
+function Base:can_stack_more(amt) return self:amt_to_max() > amt end
+
+function Base:amt_to_max() return self.max_stack - self.stack_size end
 
 function Base:readable_name()
     return self:type() .. "(" .. self.stack_size .. " / " .. self.max_stack .. ")"
 end
 
-function Base:toggle_held()
-    self.is_held = not self.is_held
-end
+function Base:toggle_held() self.is_held = not self.is_held end
 
 function Base:can_walk_on() return true end
 

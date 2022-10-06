@@ -1,4 +1,5 @@
 require "util"
+require "person"
 
 NPC = Person:extend()
 function NPC:new(x, y)
@@ -6,50 +7,33 @@ function NPC:new(x, y)
     self.target = nil
 end
 
-function NPC:update(dt)
-    NPC.super.update(dt)
-    self:move(dt)
-end
+function NPC:speed() return 5 * TILE_SIZE end
+
+function NPC:type() return "NPC" end
 
 function NPC:color()
     return color.turquoise
 end
 
-function NPC:move(dt)
+function NPC:update(dt)
+    self:ai(dt)
+end
+
+
+function NPC:ai(dt)
     if self.target == nil then
-        self.target = vec(
-            util.rand_on_grid(0, WORLD_MAX),
-            util.rand_on_grid(0, WORLD_MAX)
-        )
+        self.target = vec.rand_on_grid(0, WORLD_MAX)
     end
-    local spd = 5 * TILE_SIZE
     local dx = 0
     local dy = 0
-    if self.target.x > self:px() then
-        dx = 1
-    end
-    if self.target.y > self:py() then
-        dy = 1
-    end
-    if self.target.x < self:px() then
-        dx = -1
-    end
-    if self.target.y < self:py() then
-        dy = -1
-    end
-    if dx == 0 and dy == 0 then
-        self.target = nil
-    end
-    self.raw =
-    vec(
-        self.raw.x + (dx * dt * spd),
-        self.raw.y + (dy * dt * spd)
-    )
-    self.p =
-    vec(
-        util.snap_to_grid(self.raw.x),
-        util.snap_to_grid(self.raw.y)
-    )
+    if self.target.x > self:px() then dx = 1 end
+    if self.target.y > self:py() then dy = 1 end
+    if self.target.x < self:px() then dx = -1 end
+    if self.target.y < self:py() then dy = -1 end
+    if dx == 0 and dy == 0 then self.target = nil end
+
+    self:move(dx * dt, 0)
+    self:move(0, dy * dt)
 end
 
 function NPC:draw()

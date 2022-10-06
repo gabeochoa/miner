@@ -1,70 +1,12 @@
 ---@diagnostic disable: undefined-field
-require "util"
-require "deepcopy"
-
-Person = Base:extend()
-function Person:new(x, y)
-    Person.super.new(self, x or WORLD_MAX / 2, y or WORLD_MAX / 2)
-    self.p = vec(self.raw.x, self.raw.y)
-    self.hand_size = 1
-end
-
-function Person:px() return self.p.x end
-
-function Person:py() return self.p.y end
-
-function Person:color() return color.off_white end
-
-function Person:draw()
-    local c = (self:color():to01())
-    love.graphics.setColor(c.r, c.g, c.b, c.a)
-    love.graphics.rectangle("fill", self:px(), self:py(), TILE_SIZE, TILE_SIZE)
-end
-
---- @return Base|nil
-function Person:tile_underneath()
-    return entity_helper.matching(entities, self.p, { hide_held = true })
-end
+require "person"
 
 Player = Person:extend()
 function Player:new(x, y)
     Player.super.new(self, x or WORLD_MAX / 2, y or WORLD_MAX / 2)
-    self.speed = 2;
 end
 
-function Player:can_go(dx, dy)
-    for i = 1, self.speed, 1 do
-        local step = vec(
-            util.snap_to_grid(self.raw.x + (dx * i)),
-            util.snap_to_grid(self.raw.y + (dy * i))
-        )
-        local possible_wall = entity_helper.matching(entities, step, { impassible = true })
-        if possible_wall then
-            return false
-        end
-    end
-    return true
-end
-
-function Player:move(dx, dy)
-    if not self:can_go(dx, dy) then
-        return
-    end
-
-    self.raw =
-    vec(
-        self.raw.x + (dx * self.speed),
-        self.raw.y + (dy * self.speed)
-    --
-    )
-    self.p =
-    vec(
-        util.snap_to_grid(self.raw.x),
-        util.snap_to_grid(self.raw.y)
-    --
-    )
-    -- print(self.raw.x .. " ", self.p)
-end
+function Player:type() return "Player" end
 
 -- todo show a toast - "picked up metal"
 -- todo doesnt check grid bounds
