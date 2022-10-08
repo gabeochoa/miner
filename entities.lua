@@ -26,7 +26,7 @@ function entities.load_world()
     --     entity_helper.add(entities, Tractor(x, y))
     -- end
     -- for i = 1, 10, 1 do
-        entity_helper.add(npcs, NPC(WORLD_MAX / 2, WORLD_MAX / 2))
+        entity_helper.add(npcs, NPC(WORLD_MAX / 3, WORLD_MAX / 2))
     -- end
 
     for i = 1, WORLD_MAX, 4 * TILE_SIZE do

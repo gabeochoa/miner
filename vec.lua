@@ -30,8 +30,14 @@ end
 --- @param a vec
 --- @param b vec
 --- @return boolean
-function vec.__eq(a, b)
+function vec:__eq(a, b)
     return a.x == b.x and a.y == b.y
+end
+
+--- @param b vec
+--- @return boolean
+function vec:__eq(b)
+    return self.x == b.x and self.y == b.y
 end
 
 --- @param mn number
@@ -63,3 +69,9 @@ function vec:ID()
 
     return self._ID
 end
+
+return setmetatable({
+	new             = new,
+}, {
+	__call = function(_, ...) return new(...) end
+})

@@ -38,22 +38,22 @@ end
 ---@param scores table
 ---@return vec
 function astar.get_lowest_f(set, scores)
-    print("get_lowest_f")
-    for k, v in pairs(scores) do
-        print(k, v)
-    end
-    print("--- lowerst f")
+    -- print("get_lowest_f")
+    -- for k, v in pairs(scores) do
+    --     print(k, v)
+    -- end
+    -- print("--- lowerst f")
     local lowest = -1
     local best = nil
     for _, v in pairs(set:values()) do
-        print("scores v", v)
-        local score = scores[v]
+        -- print("scores v", v)
+        local score = astar.get_score(scores, v)
         if lowest == -1 or score < lowest then
             lowest = score
             best = v
         end
     end
-    print("best best", best)
+    -- print("best best", best, lowest)
     return best
 end
 
@@ -62,18 +62,39 @@ end
 ---@return vec[]
 function astar.get_neighbors(node, is_walkable)
     local ns = {}
-    for i = -1, 1, 1 do
-        for j = -1, 1, 1 do
-            local n = vec.snap_to_grid(node.x + (i * TILE_SIZE), node.y + (j * TILE_SIZE))
-            local m = entity_helper.matching(entities, n, { walkable = true })
-            if m ~= nil then
-                table.insert(ns, m)
-            end
+    local per_neighbor = function(i, j)
+        if i == 0 and j == 0 then
+            return
+        end
+        local n = vec.snap_to_grid(node.x + (i * TILE_SIZE), node.y + (j * TILE_SIZE))
+        local m = entity_helper.matching(entities, n, { impassible = true })
+        if m == nil then
+            table.insert(ns, n)
         end
     end
-    print("neigh", #ns)
+    for i = -1, 1, 1 do
+        for j = -1, 1, 1 do
+            per_neighbor(i, j)
+        end
+    end
+    -- print("neigh", #ns)
     return ns
 end
+
+function astar.get_score(score_table, node)
+        local key = node:__tostring()
+        local score = score_table[key]
+        if score == nil then
+            return 999999
+        end
+        return score
+    end
+
+function astar.write_score(score_table, node, score)
+        local key = node:__tostring()
+        score_table[key] = score
+    end
+
 
 ---@param start vec
 ---@param goal vec
@@ -83,7 +104,6 @@ function astar.__gen_path(start, goal, is_walkable)
     print("gen path", start, goal)
     local openset = Batteries.set()
     openset:add(start)
-    local closedset = Batteries.set()
 
     local parent_map = {}
     local gscore = {}
@@ -93,41 +113,41 @@ function astar.__gen_path(start, goal, is_walkable)
         is_walkable = function() return true end
     end
 
-    gscore[start] = 0
-    local current_score = gscore[start]
+    astar.write_score(gscore, start, 0)
+    local current_score = astar.get_score(gscore, start)
     local estimate = astar.estimate(start, goal)
-    fscore[start] = current_score + estimate
+    astar.write_score(fscore, start, current_score + estimate)
 
     while #openset:values() > 0 do
-        print("iterate", #openset:values())
+        -- print("iterate", #openset:values())
+        if #openset:values() > 10000 then
+            print("Hit loop exceed limit ")
+            break
+        end
+
         local cur = astar.get_lowest_f(openset, fscore)
-        if cur == goal then
-            print("found goal making path")
+        -- print("current: ", cur, " goal: ", goal, " ")
+        -- TODO fix eq if cur == goal then
+        if cur:__eq(goal) then
+            -- print("found goal making path")
             local path = astar.reconstruct_path({}, parent_map, goal)
             table.insert(path, goal)
             return path
         end
 
         openset:remove(cur)
-        closedset:add(cur)
-
-        print("sizeout", #openset:values(),#closedset:values())
-
         local neighbors = astar.get_neighbors(cur, is_walkable)
-        for index, neighbor in ipairs(neighbors) do
-            print("sizein", #openset:values(),#closedset:values())
-            if not closedset:has(neighbor) then
-                local tentative_g_score = gscore[cur] + astar.dist_between(cur, neighbor)
-                if not openset:has(neighbor) or tentative_g_score < gscore[neighbor] then
-                    parent_map[neighbor] = cur
-                    gscore[neighbor] = tentative_g_score
-                    fscore[neighbor] = gscore[neighbor] + astar.estimate(neighbor, goal)
-                    if not openset:has(neighbor) then
-                        openset:add(neighbor)
-                    end
+        for _, neighbor in ipairs(neighbors) do
+            local new_gscore = astar.get_score(gscore, cur) + astar.dist_between(cur, neighbor)
+            local cur_gscore = astar.get_score(gscore, neighbor)
+            if cur_gscore == nil or new_gscore < cur_gscore then
+                parent_map[neighbor:__tostring()] = cur
+                astar.write_score(gscore, neighbor, new_gscore)
+                astar.write_score(fscore, neighbor, new_gscore + astar.estimate(neighbor, goal))
+                if not openset:has(neighbor) then
+                    openset:add(neighbor)
                 end
             end
-
         end
     end
     print("ran out of options")
