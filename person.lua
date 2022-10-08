@@ -48,9 +48,9 @@ end
 
 function Person:move(dx, dy, dt)
     local dt = dt or 1;
-    if not self:can_go(dx, dy) then
-        return
-    end
+    -- if not self:can_go(dx, dy) then
+    --     return
+    -- end
     self.raw = vec(
         self.raw.x + (dx * dt * self:speed()),
         self.raw.y + (dy * dt * self:speed())

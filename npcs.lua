@@ -56,7 +56,18 @@ function NPC:ensure_active_target()
             return true
         end
         print("fetching new path")
-        self.path = astar.find_path(self.raw, self.target, can_pass)
+        local string_path = astar.find_path(self:snap_pos(), self.target, can_pass)
+        local path = {}
+        for _, value in ipairs(string_path) do
+            -- vec(0, 0)
+            local rhs = util.split(value, "(")[2] -- [ "vec(", "0,0)"]
+            local x = util.split(rhs, ",")[1]
+            local y_with_paren = util.split(rhs, ",")[2]
+            local y = util.split(y_with_paren, ")")[1]
+            local postition = vec(x, y)
+            table.insert(path, postition)
+        end
+        self.path = path
         print("got path")
         if self.path then
             print('results path')
@@ -77,7 +88,6 @@ function NPC:ensure_active_target()
         self.local_target = table.remove(self.path, 1)
     end
 
-    love.event.quit(0)
 
 end
 
@@ -108,7 +118,11 @@ function NPC:ai(dt)
         return
     end
 
-    print(self:snap_pos(), self.local_target)
+    print("snap, local", 
+        self:snap_pos(), 
+        self.local_target
+    )
+
 
     local diff = vec(
         self.local_target.x - self:px(),
@@ -118,12 +132,17 @@ function NPC:ai(dt)
     local dy = 0
     if math.abs(diff.x) >= 1 then dx = util.sign(diff.x) end
     if math.abs(diff.y) >= 1 then dy = util.sign(diff.y) end
-    print(dx, dy)
+    print('Diffs', diff.x, diff.y, dx, dy)
+
     if dx == 0 and dy == 0 then
+        print("got to local target")
         self.local_target = nil
     end
+
     self:move(dx, 0, dt)
     self:move(0, dy, dt)
+
+    -- love.event.quit(0)
 end
 
 function NPC:draw()

@@ -9,17 +9,19 @@ end
 
 ---@param path table
 ---@param map table
----@param cur vec
+---@param cur string
 ---@return table
 function astar.reconstruct_path(path, map, cur)
+    local parent = map[cur]
+    print("reconstruct_path, ", cur, parent)
     -- has no parent, then we done
-    if map[cur] == nil then
+    if parent == nil then
         return path
     else
         -- has a parent, add node to path,
         -- and continue through its parent
-        table.insert(path, 1, map[cur])
-        return astar.reconstruct_path(path, map, map[cur])
+        table.insert(path, 1, parent)
+        return astar.reconstruct_path(path, map, parent)
     end
 end
 
@@ -99,7 +101,7 @@ function astar.write_score(score_table, node, score)
 ---@param start vec
 ---@param goal vec
 ---@param is_walkable fun(node: vec): boolean
----@return vec[]
+---@return string[]
 function astar.__gen_path(start, goal, is_walkable)
     print("gen path", start, goal)
     local openset = Batteries.set()
@@ -126,12 +128,12 @@ function astar.__gen_path(start, goal, is_walkable)
         end
 
         local cur = astar.get_lowest_f(openset, fscore)
-        -- print("current: ", cur, " goal: ", goal, " ")
+        print("current: ", cur, " goal: ", goal, " ")
         -- TODO fix eq if cur == goal then
         if cur:__eq(goal) then
-            -- print("found goal making path")
-            local path = astar.reconstruct_path({}, parent_map, goal)
-            table.insert(path, goal)
+            print("found goal making path")
+            local path = astar.reconstruct_path({}, parent_map, goal:__tostring())
+            table.insert(path, goal:__tostring())
             return path
         end
 
@@ -141,7 +143,8 @@ function astar.__gen_path(start, goal, is_walkable)
             local new_gscore = astar.get_score(gscore, cur) + astar.dist_between(cur, neighbor)
             local cur_gscore = astar.get_score(gscore, neighbor)
             if cur_gscore == nil or new_gscore < cur_gscore then
-                parent_map[neighbor:__tostring()] = cur
+                parent_map[neighbor:__tostring()] = cur:__tostring()
+                -- print("writing parent", neighbor:__tostring(), cur)
                 astar.write_score(gscore, neighbor, new_gscore)
                 astar.write_score(fscore, neighbor, new_gscore + astar.estimate(neighbor, goal))
                 if not openset:has(neighbor) then
@@ -157,7 +160,7 @@ end
 ---@param start vec
 ---@param goal vec
 ---@param is_walkable fun(node: vec): boolean
----@return vec[]
+---@return string[]
 function astar.find_path(start, goal, is_walkable)
     -- if astar.path_cache[start] == nil then
     --     astar.path_cache[start] = {}
